@@ -10,26 +10,20 @@ class SanPham extends Model
     protected $primaryKey = 'idSanPham';
     public $timestamps = false;
 
-    protected $fillable = ['tenSanPham', 'moTa', 'soLuong', 'gia', 'hinh_anh', 'trangThai'];
+    protected $fillable = [
+        'tenSanPham',
+        'moTa',
+        'theLoai',
+        'gia',
+        'hinh_anh',
+        'trangThai',
+        'soLuong'
+    ];
 
-    public function hinhAnhs()
+    // Relationship
+    public function tonKho()
     {
-        return $this->hasMany(HinhAnh::class, 'idSanPham', 'idSanPham');
-    }
-
-    public function hangTonKhos()
-    {
-        return $this->hasMany(HangTonKho::class, 'idSanPham', 'idSanPham');
-    }
-
-    public function chiTietDonHangs()
-    {
-        return $this->hasMany(ChiTietDonHang::class, 'idSanPham', 'idSanPham');
-    }
-
-    public function chiTietNhapHangs()
-    {
-        return $this->hasMany(ChiTietNhapHang::class, 'idSanPham', 'idSanPham');
+        return $this->hasOne(HangTonKho::class, 'idSanPham', 'idSanPham');
     }
 
     public function donTrongGioHangs()
@@ -42,8 +36,20 @@ class SanPham extends Model
         return $this->hasMany(DanhGiaSanPham::class, 'idSanPham', 'idSanPham');
     }
 
-    public function sanPhamKhuyenMais()
+    // Tự động tạo tồn kho khi tạo sản phẩm mới
+    protected static function booted()
     {
-        return $this->hasMany(SanPhamKhuyenMai::class, 'idSanPham', 'idSanPham');
+        static::created(function ($sanPham) {
+            HangTonKho::firstOrCreate(
+                ['idSanPham' => $sanPham->idSanPham, 'idNhaKho' => 1],
+                ['soLuong' => $sanPham->soLuong ?? 0]
+            );
+        });
+    }
+
+    // Lấy tồn kho thực tế từ bảng hangtonkho
+    public function getSoLuongThucTeAttribute()
+    {
+        return $this->tonKho?->soLuong ?? 0;
     }
 }

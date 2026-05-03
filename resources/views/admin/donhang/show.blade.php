@@ -4,11 +4,12 @@
 
 @section('content')
 <div class="row">
+    <!-- Bên trái: Chi tiết đơn hàng -->
     <div class="col-md-8">
         <h3>Chi tiết Đơn hàng #{{ $donhang->idDonHang }}</h3>
         
         <table class="table table-bordered">
-            <thead>
+            <thead class="table-dark">
                 <tr>
                     <th>Sản phẩm</th>
                     <th>Số lượng</th>
@@ -26,13 +27,30 @@
                 </tr>
                 @endforeach
             </tbody>
+            <tfoot>
+                <tr class="fw-bold">
+                    <td colspan="3" class="text-end">Tổng tiền gốc:</td>
+                    <td class="text-danger">{{ number_format($donhang->tongThanhTien) }} ₫</td>
+                </tr>
+                @if($donhang->giamGia > 0)   {{-- Nếu có giảm giá --}}
+                <tr class="fw-bold text-success">
+                    <td colspan="3" class="text-end">Giảm giá:</td>
+                    <td>- {{ number_format($donhang->giamGia) }} ₫</td>
+                </tr>
+                <tr class="fw-bold fs-5">
+                    <td colspan="3" class="text-end">Thanh toán thực tế:</td>
+                    <td class="text-danger">{{ number_format($donhang->tongThanhTien - $donhang->giamGia) }} ₫</td>
+                </tr>
+                @endif
+            </tfoot>
         </table>
     </div>
 
+    <!-- Bên phải: Thông tin khách hàng + Cập nhật trạng thái -->
     <div class="col-md-4">
-        <div class="card mb-3">
+        <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                Thông tin khách hàng
+                <h5>Thông tin khách hàng</h5>
             </div>
             <div class="card-body">
                 <p><strong>Tên:</strong> {{ $donhang->khachHang->tenKhachHang }}</p>
@@ -41,8 +59,11 @@
             </div>
         </div>
 
-        <div class="card mb-3">
-            <div class="card-header">Cập nhật trạng thái</div>
+        <!-- Cập nhật trạng thái đơn hàng -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Cập nhật trạng thái</h5>
+            </div>
             <div class="card-body">
                 <form action="{{ route('admin.donhang.update', $donhang) }}" method="POST">
                     @csrf
@@ -59,7 +80,9 @@
             </div>
         </div>
 
-        <a href="{{ route('admin.donhang.index') }}" class="btn btn-secondary">← Quay lại danh sách</a>
+        <a href="{{ route('admin.donhang.index') }}" class="btn btn-secondary w-100">
+            ← Quay lại danh sách đơn hàng
+        </a>
     </div>
 </div>
 @endsection

@@ -2,100 +2,90 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AddToCartRequest;
 use App\Models\GioHang;
 use App\Models\DonTrongGioHang;
 use App\Models\SanPham;
-use App\Models\KhachHang;                    // ← Thêm dòng này
+use App\Models\KhachHang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;      // ← Thêm dòng này
+use Carbon\Carbon;
+use App\Models\ChuongTrinhGiamGia;
 
 class CartController extends Controller
 {
-    // Lấy hoặc tạo giỏ hàng cho khách hàng hiện tại
     private function getOrCreateCart()
     {
         $user = Auth::user();
 
-        // ==================== FIX TỰ ĐỘNG TẠO KHÁCH HÀNG ====================
         if (!$user->khachHang) {
-            // Tạo bản ghi khách hàng mới
-            $khachHang = KhachHang::create([
-                'tenKhachHang' => $user->tenNguoiDung ?? 'Khách hàng ' . $user->idNguoiDung,
+            KhachHang::create([
+                'tenKhachHang' => $user->tenNguoiDung ?? 'Khách hàng',
                 'email'        => $user->email ?? null,
                 'soDienThoai'  => null,
                 'diaChi'       => null,
-                'idNguoiDung'  => $user->idNguoiDung,     // Liên kết với bảng nguoidung
+                'idNguoiDung'  => $user->idNguoiDung,
             ]);
 
-            // Reload relationship để lấy dữ liệu mới nhất
             $user->load('khachHang');
         }
 
-        $khachHangId = $user->khachHang->idKhachHang;
-
-        // Tạo hoặc lấy giỏ hàng
-        $cart = GioHang::firstOrCreate(
-            ['idKhachHang' => $khachHangId],
-            ['ngayTao' => now()->toDateString()]
+        return GioHang::firstOrCreate(
+            ['idKhachHang' => $user->khachHang->idKhachHang],
+            ['ngayTao' => Carbon::now()]
         );
-
-        return $cart;
     }
 
+    // ✅ THÊM SẢN PHẨM
+    public function add(Request $request)
+    {
+        $request->validate([
+            'idSanPham' => 'required|exists:sanpham,idSanPham',
+        ]);
+
+        $cart = $this->getOrCreateCart();
+        $sanPham = SanPham::findOrFail($request->idSanPham);
+
+        if ($sanPham->soLuong < 1) {
+            return back()->with('error', 'Sản phẩm đã hết hàng!');
+        }
+
+        $item = DonTrongGioHang::where('idGioHang', $cart->idGioHang)
+            ->where('idSanPham', $sanPham->idSanPham)
+            ->first();
+
+        if ($item) {
+            $item->soLuong += 1;
+            $item->save();
+        } else {
+            DonTrongGioHang::create([
+                'idGioHang' => $cart->idGioHang,
+                'idSanPham' => $sanPham->idSanPham,
+                'soLuong'   => 1,
+            ]);
+        }
+
+        return back()->with('success', 'Đã thêm vào giỏ hàng!');
+    }
+
+    // ✅ HIỂN THỊ GIỎ HÀNG
     public function index()
     {
         $cart = $this->getOrCreateCart();
 
         $items = DonTrongGioHang::where('idGioHang', $cart->idGioHang)
-                    ->with('sanPham')
-                    ->get();
+            ->with('sanPham')
+            ->get();
 
-        $total = $items->sum(function ($item) {
-            return $item->soLuong * $item->sanPham->gia;
-        });
-
-        return view('cart.index', compact('items', 'total'));
-    }
-
-    public function add(AddToCartRequest $request)
-    {
-        $cart = $this->getOrCreateCart();
-        $sanPham = SanPham::findOrFail($request->idSanPham);
-
-        $existing = DonTrongGioHang::where('idGioHang', $cart->idGioHang)
-                    ->where('idSanPham', $sanPham->idSanPham)
-                    ->first();
-
-        if ($existing) {
-            $existing->soLuong += $request->soLuong ?? 1;
-            $existing->save();
-        } else {
-            DonTrongGioHang::create([
-                'soLuong'   => $request->soLuong ?? 1,
-                'idGioHang' => $cart->idGioHang,
-                'idSanPham' => $sanPham->idSanPham,
-            ]);
+        if ($items->isEmpty()) {
+            return view('cart.index', compact('items'));
         }
 
-        return redirect()->route('cart.index')->with('success', 'Đã thêm vào giỏ hàng!');
-    }
-    
-    public function update(Request $request)
-    {
-        $request->validate([
-            'id'      => 'required|exists:dontronggiohang,idDonTrongGioHang', 
-            'soLuong' => 'required|integer|min:1'
-        ]);
+        [$total, $discount] = $this->calculateCart($items);
 
-        $item = DonTrongGioHang::findOrFail($request->id);
-        $item->soLuong = $request->soLuong;
-        $item->save();
-
-        return redirect()->route('cart.index')->with('success', 'Cập nhật số lượng thành công!');
+        return view('cart.index', compact('items', 'total', 'discount'));
     }
 
+    // ✅ XÓA 1 SẢN PHẨM
     public function remove(Request $request)
     {
         $request->validate([
@@ -104,14 +94,75 @@ class CartController extends Controller
 
         DonTrongGioHang::destroy($request->id);
 
-        return redirect()->route('cart.index')->with('success', 'Đã xóa sản phẩm khỏi giỏ!');
+        return back()->with('success', 'Đã xóa!');
     }
 
+    // ✅ XÓA TOÀN BỘ
     public function clear()
     {
         $cart = $this->getOrCreateCart();
+
         DonTrongGioHang::where('idGioHang', $cart->idGioHang)->delete();
 
-        return redirect()->route('cart.index')->with('success', 'Đã xóa toàn bộ giỏ hàng!');
+        return back()->with('success', 'Đã xóa toàn bộ!');
+    }
+
+    // ✅ TĂNG / GIẢM SỐ LƯỢNG (FIX CHÍNH)
+    public function update(Request $request)
+    {
+        $item = DonTrongGioHang::findOrFail($request->id);
+        $sanPham = SanPham::find($item->idSanPham);
+
+        if (!$sanPham) {
+            return back()->with('error', 'Sản phẩm không tồn tại');
+        }
+
+        // Tăng
+        if ($request->action == 'increase') {
+            if ($item->soLuong < $sanPham->soLuong) {
+                $item->soLuong += 1;
+            } else {
+                return back()->with('error', 'Không đủ hàng trong kho!');
+            }
+        }
+
+        // Giảm
+        if ($request->action == 'decrease') {
+            if ($item->soLuong > 1) {
+                $item->soLuong -= 1;
+            }
+        }
+
+        $item->save();
+
+        return back();
+    }
+
+    // ✅ TÍNH TIỀN
+    private function calculateCart($items)
+    {
+        $total = 0;
+        $discount = 0;
+
+        foreach ($items as $item) {
+            $giaGoc = $item->sanPham->gia;
+
+            $giamGia = ChuongTrinhGiamGia::where('theLoai', $item->sanPham->theLoai)
+                ->whereDate('ngayBatDau', '<=', now())
+                ->whereDate('ngayKetThuc', '>=', now())
+                ->first();
+
+            if ($giamGia) {
+                $giaSauGiam = $giaGoc * (1 - $giamGia->phanTramGiam / 100);
+                $discount += ($giaGoc - $giaSauGiam) * $item->soLuong;
+            } else {
+                $giaSauGiam = $giaGoc;
+            }
+
+            $item->giaSauGiam = round($giaSauGiam);
+            $total += $item->giaSauGiam * $item->soLuong;
+        }
+
+        return [round($total), round($discount)];
     }
 }

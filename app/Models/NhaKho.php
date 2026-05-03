@@ -10,7 +10,11 @@ class NhaKho extends Model
     protected $primaryKey = 'idNhaKho';
     public $timestamps = false;
 
-    protected $fillable = ['diaChi'];
+    protected $fillable = [
+        'tenNhaKho', 
+        'diaChi', 
+        'trangThai'
+    ];
 
     public function hangTonKhos()
     {

@@ -15,11 +15,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $this->call(NguoidungTableSeeder::class);
+        $this->call(KhachhangTableSeeder::class);
+        $this->call(SanphamTableSeeder::class);
+        $this->call(DonhangTableSeeder::class);
+        $this->call(ChitietdonhangTableSeeder::class);
+        $this->call(ThanhtoanTableSeeder::class);
+        $this->call(TrahangTableSeeder::class);
+        $this->call(HangtonkhoTableSeeder::class);
+        $this->call(HinhAnhTableSeeder::class); 
+        $this->call(DanhgiasanphamTableSeeder::class);
+        $this->call(SanphamkhuyenmaiTableSeeder::class);
+        $this->call(ChitietnhaphangTableSeeder::class);
+        $this->call(KhuyenmaiTableSeeder::class);
+        $this->call(NhaphangTableSeeder::class);
+        $this->call(DontronggiohangTableSeeder::class);
+        $this->call(GiohangTableSeeder::class);
+        $this->call(ChuongtrinhGiamgiaTableSeeder::class);
     }
 }

@@ -82,5 +82,6 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/login');
+        session(['show_welcome' => true]);
     }
 }

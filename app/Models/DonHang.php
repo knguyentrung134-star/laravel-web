@@ -10,7 +10,8 @@ class DonHang extends Model
     protected $primaryKey = 'idDonHang';
     public $timestamps = false;
 
-    protected $fillable = ['ngayLap', 'tongThanhTien', 'trangThai', 'idNguoiDung', 'idKhachHang'];
+    // 🔥 thêm giamGia (không đổi logic)
+    protected $fillable = ['ngayLap', 'tongThanhTien', 'giamGia', 'trangThai', 'idNguoiDung', 'idKhachHang'];
 
     public function nguoiDung()
     {

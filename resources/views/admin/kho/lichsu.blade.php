@@ -7,6 +7,13 @@
     <h2>📜 Lịch sử Nhập hàng</h2>
     <a href="{{ route('admin.kho.create') }}" class="btn btn-success">+ Nhập hàng mới</a>
 </div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Lịch sử nhập hàng</h4>
+
+    <a href="{{ route('admin.kho.index') }}" class="btn btn-outline-secondary">
+        ← Quay lại kho
+    </a>
+</div>
 
 <table class="table table-bordered table-hover">
     <thead class="table-dark">

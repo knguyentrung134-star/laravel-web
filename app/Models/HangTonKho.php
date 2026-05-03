@@ -10,7 +10,11 @@ class HangTonKho extends Model
     protected $primaryKey = 'idHangTonKho';
     public $timestamps = false;
 
-    protected $fillable = ['soLuong', 'idSanPham', 'idNhaKho'];
+    protected $fillable = [
+        'idSanPham',
+        'idNhaKho',
+        'soLuong'
+    ];
 
     public function sanPham()
     {
@@ -20,5 +24,10 @@ class HangTonKho extends Model
     public function nhaKho()
     {
         return $this->belongsTo(NhaKho::class, 'idNhaKho', 'idNhaKho');
+    }
+
+    public function scopeOfKho($query, $idNhaKho = 1)
+    {
+        return $query->where('idNhaKho', $idNhaKho);
     }
 }

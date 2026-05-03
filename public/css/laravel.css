@@ -1,0 +1,367 @@
+/* =========================================================
+   🎵 GIAO DIỆN WEB BĂNG ĐĨA NHẠC - FINAL FIX
+   ========================================================= */
+    
+/* ===== BACKGROUND ===== */
+body {
+    background: url('/images/anh1.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: #f5e6c8;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 0;
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== NAVBAR ===== */
+.navbar {
+    background: rgba(0,0,0,0.9) !important;
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
+
+/* ===== BANNER ===== */
+.carousel-item {
+    transition: opacity 1.2s ease-in-out !important;
+}
+
+.hero-slide {
+    height: 350px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    padding-left: 50px;
+    position: relative;
+    border-radius: 20px;
+
+    transform: scale(1);
+    transition: transform 6s ease;
+    will-change: transform;
+}
+
+.carousel-item.active .hero-slide {
+    transform: scale(1.08);
+}
+
+.hero-slide .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    border-radius: 20px;
+}
+
+.hero-slide .content {
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 1s ease;
+}
+
+.carousel-item.active .content {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ===== CARD ===== */
+.product-card {
+    background: rgba(24, 24, 24, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    background: rgba(40, 40, 40, 0.95);
+    transform: translateY(-8px);
+}
+
+.card-img-top {
+    border-radius: 10px;
+}
+
+.product-title {
+    color: #ffffff;
+    font-weight: 600;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+}
+
+.product-card:hover .product-title {
+    color: #ffcc70;
+}
+
+/* ===== TEXT ===== */
+h1, h2, h3, h4, h5 {
+    color: #ffcc70;
+    text-shadow: 0 0 6px rgba(255, 200, 100, 0.3);
+}
+
+.text-muted {
+    color: #c2b280 !important;
+}
+
+.text-danger {
+    color: #ff6b6b !important;
+}
+
+/* ===== BUTTON ===== */
+.btn-spotify {
+    background: #ff7a00;
+    border: none;
+    color: white;
+    font-weight: bold;
+}
+
+.btn-spotify:hover {
+    background: #ff9a3c;
+}
+
+.btn-detail {
+    border: 1px solid #ffcc70;
+    color: #ffcc70;
+}
+
+.btn-detail:hover {
+    background: #ffcc70;
+    color: black;
+}
+
+/* =========================================================
+   💬 CHATBOX
+   ========================================================= */
+
+#chat-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+
+    background: linear-gradient(135deg, #ff7a00, #ff9a3c);
+    color: white;
+
+    width: 55px;
+    height: 55px;
+
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 22px;
+    cursor: pointer;
+
+    box-shadow: 0 0 15px rgba(255,122,0,0.7);
+    z-index: 9999;
+}
+
+/* ===== HOTLINE ===== */
+#hotline-btn {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+
+    background: #ff3b3b;
+    color: white;
+
+    width: 55px;
+    height: 55px;
+
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    z-index: 9999;
+}
+
+/* ===== POPUP SỐ ĐIỆN THOẠI ===== */
+#phone-popup {
+    position: fixed;
+    bottom: 160px;
+    right: 20px;
+
+    background: #000;
+    color: #ffcc70;
+
+    padding: 10px 15px;
+    border-radius: 10px;
+
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(255,122,0,0.5);
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+
+    z-index: 9999;
+}
+
+#phone-popup.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* ===== CHAT BOX ===== */
+#chat-box {
+    position: fixed;
+    bottom: 90px;
+    right: 90px;
+
+    width: 320px;
+    height: 420px;
+
+    background: #121212;
+    border-radius: 15px;
+
+    display: flex;
+    flex-direction: column;
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+
+    overflow: hidden;
+    z-index: 9999;
+}
+
+#chat-box.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.chat-header {
+    background: #000;
+    color: #ffcc70;
+    padding: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+}
+
+.chat-body {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.chat-body .user,
+.chat-body .bot {
+    margin: 6px 0;
+    animation: fadeIn 0.3s ease;
+}
+
+.chat-body .user {
+    text-align: right;
+    color: #fff;
+}
+
+.chat-body .bot {
+    text-align: left;
+    color: #ffcc70;
+}
+
+.chat-footer {
+    display: flex;
+    border-top: 1px solid #333;
+}
+
+.chat-footer input {
+    flex: 1;
+    border: none;
+    padding: 10px;
+    background: #181818;
+    color: white;
+}
+
+.chat-footer button {
+    background: #ff7a00;
+    border: none;
+    color: white;
+    padding: 10px;
+}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .hero-slide {
+        height: 220px;
+        padding-left: 20px;
+    }
+
+    #chat-box {
+        width: 90%;
+        right: 5%;
+        bottom: 80px;
+    }
+
+    #hotline-btn {
+        bottom: 150px;
+    }
+
+    #phone-popup {
+        right: 5%;
+    }
+}
+/* 🔥 Ribbon SALE */
+.sale-ribbon {
+    position: absolute;
+    top: 12px;
+    left: -35px;
+    background: linear-gradient(45deg, #ff0000, #ff5e5e);
+    color: white;
+    padding: 6px 50px;
+    font-size: 12px;
+    font-weight: bold;
+    transform: rotate(-45deg);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
+/* 💥 Hover card */
+.product-card {
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+}
+
+/* ✨ Nhấp nháy nhẹ */
+.sale-ribbon {
+    animation: glow 1.2s infinite;
+}
+
+@keyframes glow {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
