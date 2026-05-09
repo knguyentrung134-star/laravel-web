@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
-class ProductSearchTest extends TestCase
+class CartTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -17,104 +17,100 @@ class ProductSearchTest extends TestCase
         parent::setUp();
 
         DB::table('sanpham')->insert([
-            [
-                'idSanPham' => 1,
-                'tenSanPham' => 'Nhạc Cách Mạng Vol 1',
-                'gia' => 120000,
-                'moTa' => 'Nhạc cách mạng',
-                'trangThai' => 'Còn hàng',
-                'theLoai' => 'Nhạc Cách Mạng'
-            ],
-            [
-                'idSanPham' => 2,
-                'tenSanPham' => 'Nhạc Trẻ Hay Nhất',
-                'gia' => 95000,
-                'moTa' => 'Nhạc trẻ',
-                'trangThai' => 'Còn hàng',
-                'theLoai' => 'Nhạc Trẻ'
-            ]
+            'idSanPham' => 1,
+            'tenSanPham' => 'Album Test',
+            'gia' => 100000,
+            'moTa' => 'Test',
+            'trangThai' => 'Còn hàng',
+            'theLoai' => 'Nhạc Trẻ'
         ]);
     }
 
-    public function test_TC01_tim_san_pham_hop_le()
+    public function test_TC01_them_vao_gio()
     {
-        $response = $this->get('/search?q=Nhạc');
+        $response = $this->post('/cart/add', [
+            'idSanPham' => 1,
+            'soLuong' => 1
+        ]);
 
-        $response->assertStatus(200);
-
-        $response->assertSee('Nhạc Cách Mạng');
+        $response->assertStatus(302);
 
         self::$results[] = [
             'TC01',
-            'Tìm sản phẩm hợp lệ',
-            'Hiển thị sản phẩm',
-            'Hiển thị sản phẩm',
+            'Thêm vào giỏ hàng',
+            'Thêm giỏ hàng thành công',
+            'Thêm giỏ hàng thành công',
             'PASS'
         ];
     }
 
-    public function test_TC02_tim_kiem_rong()
+    public function test_TC02_san_pham_khong_ton_tai()
     {
-        $response = $this->get('/search?q=');
+        $response = $this->post('/cart/add', [
+            'idSanPham' => 999,
+            'soLuong' => 1
+        ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(302);
 
         self::$results[] = [
             'TC02',
-            'Từ khóa rỗng',
-            'Không lỗi',
-            'Không lỗi',
+            'Sản phẩm không tồn tại',
+            'Thông báo lỗi',
+            'Thông báo lỗi',
             'PASS'
         ];
     }
 
-    public function test_TC03_ky_tu_dac_biet()
+    public function test_TC03_so_luong_am()
     {
-        $response = $this->get('/search?q=@#$');
+        $response = $this->post('/cart/add', [
+            'idSanPham' => 1,
+            'soLuong' => -1
+        ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(302);
 
         self::$results[] = [
             'TC03',
-            'Ký tự đặc biệt',
-            'Không lỗi',
-            'Không lỗi',
+            'Số lượng âm',
+            'Thông báo lỗi',
+            'Thông báo lỗi',
             'PASS'
         ];
     }
 
-    public function test_TC04_san_pham_ton_tai()
+    public function test_TC04_khong_nhap_so_luong()
     {
-        $response = $this->get('/search?q=Vol 1');
+        $response = $this->post('/cart/add', [
+            'idSanPham' => 1
+        ]);
 
-        $response->assertStatus(200);
-
-        $response->assertSee('Vol 1');
+        $response->assertStatus(302);
 
         self::$results[] = [
             'TC04',
-            'Sản phẩm tồn tại',
-            'Tìm thấy sản phẩm',
-            'Tìm thấy sản phẩm',
+            'Không nhập số lượng',
+            'Thông báo lỗi',
+            'Thông báo lỗi',
             'PASS'
         ];
     }
 
-    public function test_TC05_tu_khoa_hop_le()
+    public function test_TC05_them_nhieu_san_pham()
     {
-        $response = $this->get('/search?q=Nhạc');
+        $response = $this->post('/cart/add', [
+            'idSanPham' => 1,
+            'soLuong' => 5
+        ]);
 
-        $response->assertStatus(200);
-
-        $response->assertSee('Nhạc Cách Mạng');
-
-        $response->assertSee('Nhạc Trẻ');
+        $response->assertStatus(302);
 
         self::$results[] = [
             'TC05',
-            'Từ khóa hợp lệ',
-            'Hiển thị danh sách',
-            'Hiển thị danh sách',
+            'Thêm nhiều sản phẩm',
+            'Thêm giỏ hàng thành công',
+            'Thêm giỏ hàng thành công',
             'PASS'
         ];
     }
@@ -136,7 +132,7 @@ class ProductSearchTest extends TestCase
         $this->createFolder();
 
         $filename = storage_path(
-            'app/test_reports/ProductSearchTest_' .
+            'app/test_reports/CartTest_' .
             date('Ymd_His') .
             '.csv'
         );

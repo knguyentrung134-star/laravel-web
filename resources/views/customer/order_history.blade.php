@@ -10,11 +10,6 @@
         <div class="alert alert-info">Bạn chưa có đơn hàng nào.</div>
     @else
         @foreach($donHangs as $don)
-        @php
-            $giamGia = $don->giamGia ?? 0;
-            $tongGoc = $don->tongThanhTien + $giamGia;
-        @endphp
-
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <strong>Mã đơn hàng: #{{ $don->idDonHang }}</strong>
@@ -38,16 +33,22 @@
                     </thead>
                     <tbody>
                         @foreach($don->chiTietDonHangs as $ct)
-                        @php
-                            $tyLeGiam = $tongGoc > 0 ? ($giamGia / $tongGoc) : 0;
-                            $thanhTienSauKM = round($ct->soLuong * $ct->donGia * (1 - $tyLeGiam));
-                        @endphp
                         <tr>
-                            <td>{{ $ct->sanPham->tenSanPham }}</td>
+                            <td>{{ $ct->sanPham->tenSanPham ?? 'N/A' }}</td>
                             <td>{{ $ct->soLuong }}</td>
-                            <td>{{ number_format($ct->donGia) }} ₫</td>
-                            <td class="fw-bold text-danger">
-                                {{ number_format($thanhTienSauKM) }} ₫
+                            <td class="text-end">
+                                @if($ct->sanPham && $ct->donGia < $ct->sanPham->gia)
+                                    <span class="text-danger fw-bold">{{ number_format($ct->donGia) }} ₫</span>
+                                    <br>
+                                    <small class="text-muted text-decoration-line-through">
+                                        {{ number_format($ct->sanPham->gia) }} ₫
+                                    </small>
+                                @else
+                                    {{ number_format($ct->donGia) }} ₫
+                                @endif
+                            </td>
+                            <td class="fw-bold text-danger text-end">
+                                {{ number_format($ct->soLuong * $ct->donGia) }} ₫
                             </td>
                         </tr>
                         @endforeach

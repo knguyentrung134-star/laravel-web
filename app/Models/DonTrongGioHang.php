@@ -10,7 +10,7 @@ class DonTrongGioHang extends Model
     protected $primaryKey = 'idDonTrongGioHang';
     public $timestamps = false;
 
-    protected $fillable = ['soLuong', 'idGioHang', 'idSanPham', 'idDonHang'];
+    protected $fillable = ['soLuong', 'idGioHang', 'idSanPham', 'idDonHang', 'gia'];
 
     public function gioHang()
     {

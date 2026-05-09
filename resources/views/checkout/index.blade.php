@@ -20,24 +20,34 @@
                 </thead>
                 <tbody>
                     @foreach($items as $item)
+                    @php
+                        $sp = $item->sanPham;
+                        // 🔥 Ưu tiên giá đã lưu trong giỏ hàng
+                        $giaHienTai = $item->gia ?? $sp->gia;
+                        $giaGoc     = $sp->gia;
+                        $thanhTien  = $giaHienTai * $item->soLuong;
+                    @endphp
+
                     <tr>
-                        <td>{{ $item->sanPham->tenSanPham }}</td>
+                        <td>{{ $sp->tenSanPham }}</td>
                         <td class="text-center">{{ $item->soLuong }}</td>
                         <td class="text-end">
-                            @if(isset($item->giaSauGiam) && $item->giaSauGiam < $item->sanPham->gia)
+                            @if($giaHienTai < $giaGoc)
                                 <span class="text-danger fw-bold">
-                                    {{ number_format($item->giaSauGiam) }} ₫
+                                    {{ number_format($giaHienTai) }} ₫
                                 </span>
                                 <br>
                                 <small class="text-muted text-decoration-line-through">
-                                    {{ number_format($item->sanPham->gia) }} ₫
+                                    {{ number_format($giaGoc) }} ₫
                                 </small>
                             @else
-                                {{ number_format($item->sanPham->gia) }} ₫
+                                <span class="fw-bold">
+                                    {{ number_format($giaHienTai) }} ₫
+                                </span>
                             @endif
                         </td>
                         <td class="text-end fw-bold">
-                            {{ number_format($item->soLuong * ($item->giaSauGiam ?? $item->sanPham->gia)) }} ₫
+                            {{ number_format($thanhTien) }} ₫
                         </td>
                     </tr>
                     @endforeach
@@ -123,30 +133,29 @@
                             </select>
                         </div>
 
-                    
                         <!-- Khu vực QR Code -->
-<div id="qrCodeSection" class="mb-4" style="display: none;">
-    <div class="card border-primary">
-        <div class="card-header bg-primary text-white text-center py-2">
-            <h6 class="mb-0">Quét mã QR để thanh toán</h6>
-        </div>
-        <div class="card-body text-center p-3">
-            
-            <img id="qrImage" 
-                 src="https://img.vietqr.io/image/BIDV-2601663003-compact2.png?amount=0"
-                 class="img-fluid rounded shadow" 
-                 style="max-width: 280px;"
-                 alt="Mã QR Thanh toán">
+                        <div id="qrCodeSection" class="mb-4" style="display: none;">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white text-center py-2">
+                                    <h6 class="mb-0">Quét mã QR để thanh toán</h6>
+                                </div>
+                                <div class="card-body text-center p-3">
+                                    <img id="qrImage" 
+                                         src="https://img.vietqr.io/image/BIDV-2601663003-compact2.png?amount=0"
+                                         class="img-fluid rounded shadow" 
+                                         style="max-width: 280px;"
+                                         alt="Mã QR Thanh toán">
 
-            <div class="mt-3 small text-muted">
-                <p class="mb-1 fw-bold">Ngân hàng BIDV</p>
-                <p class="mb-1">Số tài khoản: <strong>2601663003</strong></p>
-                <p>Chủ tài khoản: NGUYEN TRUNG KIEN</p>
-                <p class="mt-2 text-danger fw-bold">Vui lòng chuyển đúng số tiền trên đơn hàng</p>
-            </div>
-        </div>
-    </div>
-</div>          
+                                    <div class="mt-3 small text-muted">
+                                        <p class="mb-1 fw-bold">Ngân hàng BIDV</p>
+                                        <p class="mb-1">Số tài khoản: <strong>2601663003</strong></p>
+                                        <p>Chủ tài khoản: NGUYEN TRUNG KIEN</p>
+                                        <p class="mt-2 text-danger fw-bold">Vui lòng chuyển đúng số tiền trên đơn hàng</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>          
+
                         <button type="submit" class="btn btn-success btn-lg w-100">
                             <i class="bi bi-check-circle"></i> Xác nhận đặt hàng
                         </button>
@@ -157,6 +166,7 @@
     </div>
 </div>
 @endsection
+
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -171,22 +181,16 @@ document.addEventListener('DOMContentLoaded', function () {
             const amount = {{ (int) $total }};
             const addInfo = encodeURIComponent("DH{{ auth()->id() ?? 'KH' }}");
 
-            // Tạo URL động
             const newSrc = `${baseUrl}?amount=${amount}&addInfo=${addInfo}&accountName=NGUYEN%20TRUNG%20KIEN`;
 
             qrImage.src = newSrc;
             qrSection.style.display = 'block';
-            
-            console.log('QR updated with amount:', amount); // debug
         } else {
             qrSection.style.display = 'none';
         }
     }
 
-    // Lắng nghe sự kiện thay đổi
     select.addEventListener('change', updateQR);
-    
-    // Chạy ngay khi trang load
     updateQR();
 });
 </script>

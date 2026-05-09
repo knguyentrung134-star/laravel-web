@@ -20,26 +20,34 @@
             <tbody>
                 @foreach($donhang->chiTietDonHangs as $ct)
                 <tr>
-                    <td>{{ $ct->sanPham->tenSanPham }}</td>
+                    <td>{{ $ct->sanPham->tenSanPham ?? 'N/A' }}</td>
                     <td>{{ $ct->soLuong }}</td>
-                    <td>{{ number_format($ct->donGia) }} ₫</td>
-                    <td>{{ number_format($ct->soLuong * $ct->donGia) }} ₫</td>
+                    <td class="text-end">
+                        @if($ct->sanPham && $ct->donGia < $ct->sanPham->gia)
+                            <span class="text-danger fw-bold">{{ number_format($ct->donGia) }} ₫</span>
+                            <br>
+                            <small class="text-muted text-decoration-line-through">
+                                {{ number_format($ct->sanPham->gia) }} ₫
+                            </small>
+                        @else
+                            {{ number_format($ct->donGia) }} ₫
+                        @endif
+                    </td>
+                    <td class="fw-bold text-danger text-end">
+                        {{ number_format($ct->soLuong * $ct->donGia) }} ₫
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr class="fw-bold">
-                    <td colspan="3" class="text-end">Tổng tiền gốc:</td>
+                    <td colspan="3" class="text-end">Tổng thanh toán:</td>
                     <td class="text-danger">{{ number_format($donhang->tongThanhTien) }} ₫</td>
                 </tr>
-                @if($donhang->giamGia > 0)   {{-- Nếu có giảm giá --}}
-                <tr class="fw-bold text-success">
+                @if($donhang->giamGia > 0)
+                <tr class="text-success fw-bold">
                     <td colspan="3" class="text-end">Giảm giá:</td>
                     <td>- {{ number_format($donhang->giamGia) }} ₫</td>
-                </tr>
-                <tr class="fw-bold fs-5">
-                    <td colspan="3" class="text-end">Thanh toán thực tế:</td>
-                    <td class="text-danger">{{ number_format($donhang->tongThanhTien - $donhang->giamGia) }} ₫</td>
                 </tr>
                 @endif
             </tfoot>
@@ -53,9 +61,9 @@
                 <h5>Thông tin khách hàng</h5>
             </div>
             <div class="card-body">
-                <p><strong>Tên:</strong> {{ $donhang->khachHang->tenKhachHang }}</p>
-                <p><strong>Địa chỉ:</strong> {{ $donhang->khachHang->diaChi }}</p>
-                <p><strong>SĐT:</strong> {{ $donhang->khachHang->soDienThoai }}</p>
+                <p><strong>Tên:</strong> {{ $donhang->khachHang->tenKhachHang ?? 'N/A' }}</p>
+                <p><strong>Địa chỉ:</strong> {{ $donhang->khachHang->diaChi ?? 'N/A' }}</p>
+                <p><strong>SĐT:</strong> {{ $donhang->khachHang->soDienThoai ?? 'N/A' }}</p>
             </div>
         </div>
 

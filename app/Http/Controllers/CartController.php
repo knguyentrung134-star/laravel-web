@@ -35,12 +35,24 @@ class CartController extends Controller
         );
     }
 
-    // ✅ THÊM SẢN PHẨM
+    private function getDiscountedPrice(SanPham $sanPham)
+    {
+        $giaGoc = $sanPham->gia;
+
+        $giamGia = ChuongTrinhGiamGia::where('theLoai', $sanPham->theLoai)
+            ->whereDate('ngayBatDau', '<=', now())
+            ->whereDate('ngayKetThuc', '>=', now())
+            ->first();
+
+        return $giamGia 
+            ? round($giaGoc * (1 - $giamGia->phanTramGiam / 100)) 
+            : $giaGoc;
+    }
+
+    // ✅ THÊM SẢN PHẨM VÀO GIỎ
     public function add(Request $request)
     {
-        $request->validate([
-            'idSanPham' => 'required|exists:sanpham,idSanPham',
-        ]);
+        $request->validate(['idSanPham' => 'required|exists:sanpham,idSanPham']);
 
         $cart = $this->getOrCreateCart();
         $sanPham = SanPham::findOrFail($request->idSanPham);
@@ -49,20 +61,16 @@ class CartController extends Controller
             return back()->with('error', 'Sản phẩm đã hết hàng!');
         }
 
-        $item = DonTrongGioHang::where('idGioHang', $cart->idGioHang)
-            ->where('idSanPham', $sanPham->idSanPham)
-            ->first();
+        $giaSauGiam = $this->getDiscountedPrice($sanPham);
 
-        if ($item) {
-            $item->soLuong += 1;
-            $item->save();
-        } else {
-            DonTrongGioHang::create([
-                'idGioHang' => $cart->idGioHang,
-                'idSanPham' => $sanPham->idSanPham,
-                'soLuong'   => 1,
-            ]);
-        }
+        $item = DonTrongGioHang::firstOrNew([
+            'idGioHang' => $cart->idGioHang,
+            'idSanPham' => $sanPham->idSanPham,
+        ]);
+
+        $item->soLuong = ($item->soLuong ?? 0) + 1;
+        $item->gia = $giaSauGiam;
+        $item->save();
 
         return back()->with('success', 'Đã thêm vào giỏ hàng!');
     }
@@ -76,38 +84,48 @@ class CartController extends Controller
             ->with('sanPham')
             ->get();
 
-        if ($items->isEmpty()) {
-            return view('cart.index', compact('items'));
-        }
-
         [$total, $discount] = $this->calculateCart($items);
 
         return view('cart.index', compact('items', 'total', 'discount'));
     }
 
-    // ✅ XÓA 1 SẢN PHẨM
+    // ✅ TÍNH TỔNG TIỀN
+    private function calculateCart($items)
+    {
+        $total = 0;
+        $discount = 0;
+
+        foreach ($items as $item) {
+            $giaGoc = $item->sanPham->gia;
+            $giaHienTai = $item->gia ?? $this->getDiscountedPrice($item->sanPham);
+
+            $total += $giaHienTai * $item->soLuong;
+
+            if ($giaHienTai < $giaGoc) {
+                $discount += ($giaGoc - $giaHienTai) * $item->soLuong;
+            }
+        }
+
+        return [round($total), round($discount)];
+    }
+
+    // ✅ XÓA SẢN PHẨM
     public function remove(Request $request)
     {
-        $request->validate([
-            'id' => 'required|exists:dontronggiohang,idDonTrongGioHang'
-        ]);
-
+        $request->validate(['id' => 'required|exists:dontronggiohang,idDonTrongGioHang']);
         DonTrongGioHang::destroy($request->id);
-
         return back()->with('success', 'Đã xóa!');
     }
 
-    // ✅ XÓA TOÀN BỘ
+    // ✅ XÓA TOÀN BỘ GIỎ HÀNG
     public function clear()
     {
         $cart = $this->getOrCreateCart();
-
         DonTrongGioHang::where('idGioHang', $cart->idGioHang)->delete();
-
-        return back()->with('success', 'Đã xóa toàn bộ!');
+        return back()->with('success', 'Đã xóa toàn bộ giỏ hàng!');
     }
 
-    // ✅ TĂNG / GIẢM SỐ LƯỢNG (FIX CHÍNH)
+    // ✅ CẬP NHẬT SỐ LƯỢNG
     public function update(Request $request)
     {
         $item = DonTrongGioHang::findOrFail($request->id);
@@ -117,52 +135,37 @@ class CartController extends Controller
             return back()->with('error', 'Sản phẩm không tồn tại');
         }
 
-        // Tăng
         if ($request->action == 'increase') {
             if ($item->soLuong < $sanPham->soLuong) {
                 $item->soLuong += 1;
             } else {
                 return back()->with('error', 'Không đủ hàng trong kho!');
             }
-        }
-
-        // Giảm
-        if ($request->action == 'decrease') {
+        } elseif ($request->action == 'decrease') { 
             if ($item->soLuong > 1) {
                 $item->soLuong -= 1;
             }
         }
 
+        $item->gia = $this->getDiscountedPrice($sanPham);
         $item->save();
 
         return back();
     }
 
-    // ✅ TÍNH TIỀN
-    private function calculateCart($items)
+    // ==================== THÊM MỚI: CHECKOUT ====================
+    public function checkout(Request $request)
     {
-        $total = 0;
-        $discount = 0;
+        $selectedIds = $request->input('selected_items', []);
 
-        foreach ($items as $item) {
-            $giaGoc = $item->sanPham->gia;
-
-            $giamGia = ChuongTrinhGiamGia::where('theLoai', $item->sanPham->theLoai)
-                ->whereDate('ngayBatDau', '<=', now())
-                ->whereDate('ngayKetThuc', '>=', now())
-                ->first();
-
-            if ($giamGia) {
-                $giaSauGiam = $giaGoc * (1 - $giamGia->phanTramGiam / 100);
-                $discount += ($giaGoc - $giaSauGiam) * $item->soLuong;
-            } else {
-                $giaSauGiam = $giaGoc;
-            }
-
-            $item->giaSauGiam = round($giaSauGiam);
-            $total += $item->giaSauGiam * $item->soLuong;
+        if (empty($selectedIds)) {
+            return redirect()->route('cart.index')
+                ->with('error', 'Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
         }
 
-        return [round($total), round($discount)];
+        // Lưu danh sách sản phẩm được chọn vào session
+        session(['checkout_items' => $selectedIds]);
+
+        return redirect()->route('checkout.index');
     }
 }

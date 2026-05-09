@@ -10,7 +10,6 @@ use App\Models\GioHang;
 use App\Models\ChuongTrinhGiamGia;
 use App\Models\HangTonKho;
 use App\Models\SanPham;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,35 +19,21 @@ class CheckoutController extends Controller
 {
     public function index(Request $request)
     {
-        $user = Auth::user();
-        $khachHang = $user->khachHang;
+        $cart = $this->getOrCreateCart();
 
-        if (!$khachHang) {
-            return redirect()->route('login')
-                ->with('error', 'Vui lòng đăng nhập để thanh toán');
-        }
-
-        $selectedIds = $request->selected;
-
-        if (!$selectedIds || count($selectedIds) == 0) {
-            return redirect()->route('cart.index')
-                ->with('error', 'Vui lòng chọn sản phẩm để thanh toán');
-        }
-
-        $items = DonTrongGioHang::whereIn('idDonTrongGioHang', $selectedIds)
+        $items = DonTrongGioHang::where('idGioHang', $cart->idGioHang)
             ->with('sanPham')
             ->get();
 
+        if ($items->isEmpty()) {
+            return redirect()->route('cart.index');
+        }
+
         [$total, $discount] = $this->calculateCart($items);
 
-        session(['checkout_items' => $selectedIds]);
+        $khachHang = Auth::user()->khachHang;
 
-        return view('checkout.index', compact(
-            'items',
-            'total',
-            'discount',
-            'khachHang'
-        ));
+        return view('checkout.index', compact('items', 'total', 'discount', 'khachHang'));
     }
 
     public function store(Request $request)
@@ -63,7 +48,7 @@ class CheckoutController extends Controller
         $user = Auth::user();
         $khachHang = $user->khachHang;
 
-        // 🔥 cập nhật thông tin KH
+        // Cập nhật thông tin khách hàng
         $khachHang->update([
             'tenKhachHang' => $request->tenKhachHang,
             'diaChi'       => $request->diaChi,
@@ -71,6 +56,10 @@ class CheckoutController extends Controller
         ]);
 
         $selectedIds = session('checkout_items');
+
+        if (!$selectedIds || count($selectedIds) == 0) {
+            return back()->with('error', 'Chưa chọn sản phẩm checkout');
+        }
 
         DB::beginTransaction();
 
@@ -84,70 +73,59 @@ class CheckoutController extends Controller
                 throw new \Exception('Giỏ hàng trống');
             }
 
-            // 🔥 TRỪ KHO (FIX CHUẨN)
+            // Trừ kho
             foreach ($items as $item) {
-
-                // lock kho
                 $tonKho = HangTonKho::where('idSanPham', $item->idSanPham)
                     ->lockForUpdate()
                     ->first();
 
-                // ❗ FIX: nếu chưa có kho → coi như 0
-                if (!$tonKho) {
-                    throw new \Exception("Sản phẩm {$item->sanPham->tenSanPham} chưa có trong kho");
+                if (!$tonKho || $tonKho->soLuong < $item->soLuong) {
+                    throw new \Exception("Sản phẩm {$item->sanPham->tenSanPham} không đủ tồn kho");
                 }
 
-                $soLuongTon = $tonKho->soLuong;
-
-                // ❗ chặn âm kho
-                if ($soLuongTon < $item->soLuong) {
-                    throw new \Exception(
-                        "Sản phẩm {$item->sanPham->tenSanPham} chỉ còn {$soLuongTon}"
-                    );
-                }
-
-                // trừ kho
                 $tonKho->decrement('soLuong', $item->soLuong);
 
-                // đồng bộ lại tổng tồn → bảng sản phẩm
-                $totalTon = HangTonKho::where('idSanPham', $item->idSanPham)
-                    ->sum('soLuong');
-
+                $totalTon = HangTonKho::where('idSanPham', $item->idSanPham)->sum('soLuong');
                 SanPham::where('idSanPham', $item->idSanPham)
                     ->update(['soLuong' => $totalTon]);
             }
 
-            // 🔥 tính tiền
+            // Tính tiền + gán giaSauGiam
             [$total, $discount] = $this->calculateCart($items);
 
+            // Tạo đơn hàng
             $donHang = DonHang::create([
-                'ngayLap'        => Carbon::now(),
-                'tongThanhTien'  => $total,
-                'giamGia'        => $discount,
-                'trangThai'      => 'Đang xử lý',
-                'idNguoiDung'    => $user->idNguoiDung,
-                'idKhachHang'    => $khachHang->idKhachHang,
+                'ngayLap'       => Carbon::now(),
+                'tongThanhTien' => $total,
+                'giamGia'       => $discount,
+                'trangThai'     => 'Đang xử lý',
+                'idNguoiDung'   => $user->idNguoiDung,
+                'idKhachHang'   => $khachHang->idKhachHang,
             ]);
 
+            // ==================== TẠO CHI TIẾT ĐƠN HÀNG ====================
             foreach ($items as $item) {
+                // Ưu tiên giaSauGiam đã tính trong calculateCart
+                $donGiaThucTe = $item->giaSauGiam ?? $item->gia ?? $item->sanPham->gia ?? 0;
+
                 ChiTietDonHang::create([
-                    'soLuong'    => $item->soLuong,
-                    'donGia'     => $item->giaSauGiam,
-                    'idDonHang'  => $donHang->idDonHang,
-                    'idSanPham'  => $item->idSanPham,
+                    'soLuong'   => $item->soLuong,
+                    'donGia'    => $donGiaThucTe,           // Giá sau giảm thực tế
+                    'idDonHang' => $donHang->idDonHang,
+                    'idSanPham' => $item->idSanPham,
                 ]);
             }
 
+            // Tạo thanh toán
             ThanhToan::create([
-                'idDonHang'   => $donHang->idDonHang,
-                'soTien'      => $total,
-                'phuongThuc'  => $request->phuongThuc,
-                'trangThai'   => 'Hoàn thành',
+                'idDonHang'  => $donHang->idDonHang,
+                'soTien'     => $total,
+                'phuongThuc' => $request->phuongThuc,
+                'trangThai'  => 'Hoàn thành',
             ]);
 
-            // xóa giỏ hàng
+            // Xóa item đã mua
             DonTrongGioHang::whereIn('idDonTrongGioHang', $selectedIds)->delete();
-
             session()->forget('checkout_items');
 
             DB::commit();
@@ -157,7 +135,6 @@ class CheckoutController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-
             return back()->with('error', $e->getMessage());
         }
     }
@@ -170,22 +147,41 @@ class CheckoutController extends Controller
         foreach ($items as $item) {
             $giaGoc = $item->sanPham->gia ?? 0;
 
-            $giamGia = ChuongTrinhGiamGia::where('theLoai', $item->sanPham->theLoai)
-                ->where('ngayBatDau', '<=', Carbon::now())
-                ->where('ngayKetThuc', '>=', Carbon::now())
-                ->first();
-
-            if ($giamGia) {
-                $giaMoi = $giaGoc * (1 - $giamGia->phanTramGiam / 100);
-                $discount += ($giaGoc - $giaMoi) * $item->soLuong;
+            // Ưu tiên giá đã lưu trong giỏ hàng (đã giảm giá khi add)
+            if ($item->gia) {
+                $giaMoi = $item->gia;
             } else {
-                $giaMoi = $giaGoc;
+                $giamGia = ChuongTrinhGiamGia::where('theLoai', $item->sanPham->theLoai)
+                    ->where('ngayBatDau', '<=', Carbon::now())
+                    ->where('ngayKetThuc', '>=', Carbon::now())
+                    ->first();
+
+                $giaMoi = $giamGia 
+                    ? round($giaGoc * (1 - $giamGia->phanTramGiam / 100)) 
+                    : $giaGoc;
             }
 
-            $item->giaSauGiam = round($giaMoi);
-            $total += $item->giaSauGiam * $item->soLuong;
+            // Gán thuộc tính động để dùng sau
+            $item->giaSauGiam = $giaMoi;
+
+            $total += $giaMoi * $item->soLuong;
+            $discount += ($giaGoc - $giaMoi) * $item->soLuong;
         }
 
         return [round($total), round($discount)];
+    }
+
+    private function getOrCreateCart()
+    {
+        $user = Auth::user();
+        $khachHang = $user->khachHang;
+
+        $cart = GioHang::where('idKhachHang', $khachHang->idKhachHang)->first();
+
+        if (!$cart) {
+            $cart = GioHang::create(['idKhachHang' => $khachHang->idKhachHang]);
+        }
+
+        return $cart;
     }
 }
