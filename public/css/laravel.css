@@ -14,7 +14,7 @@ body::before {
     content: "";
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(112, 195, 236, 0.75);
     z-index: 0;
 }
 
@@ -25,7 +25,7 @@ body::before {
 
 /* ===== NAVBAR ===== */
 .navbar {
-    background: rgba(0,0,0,0.9) !important;
+    background: rgba(71, 83, 80, 0.9) !important;
     backdrop-filter: blur(8px);
     position: sticky;
     top: 0;
@@ -96,7 +96,7 @@ body::before {
 .product-title {
     color: #ffffff;
     font-weight: 600;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+    text-shadow: 0 2px 6px rgba(79, 128, 58, 0.9);
 }
 
 .product-card:hover .product-title {
@@ -148,7 +148,7 @@ h1, h2, h3, h4, h5 {
     bottom: 20px;
     right: 20px;
 
-    background: linear-gradient(135deg, #ff7a00, #ff9a3c);
+    background: linear-gradient(135deg, #06f139, #70f106);
     color: white;
 
     width: 55px;
@@ -162,7 +162,7 @@ h1, h2, h3, h4, h5 {
     font-size: 22px;
     cursor: pointer;
 
-    box-shadow: 0 0 15px rgba(255,122,0,0.7);
+    box-shadow: 0 0 15px rgba(148, 244, 4, 0.7);
     z-index: 9999;
 }
 

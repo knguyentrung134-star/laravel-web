@@ -41,7 +41,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto align-items-center">
 
-                <!-- SEARCH -->
+                <!-- SEARCH -->     
                 <li class="nav-item mx-3">
                     <form class="d-flex" action="{{ route('search') }}" method="GET">
                         <input class="form-control me-2" type="search" name="q"

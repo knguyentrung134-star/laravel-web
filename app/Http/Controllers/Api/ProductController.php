@@ -12,7 +12,12 @@ class ProductController extends Controller
     {
         $products = SanPham::paginate(20);
 
-        return response()->json($products);
+        return response()->json(
+            $products,
+            200,
+            [],
+            JSON_UNESCAPED_UNICODE
+        );
     }
 
     public function show($id)
@@ -20,14 +25,21 @@ class ProductController extends Controller
         $product = SanPham::with('danhGias')
             ->findOrFail($id);
 
-        return response()->json($product);
+        return response()->json(
+            $product,
+            200,
+            [],
+            JSON_UNESCAPED_UNICODE
+        );
     }
 
     public function store(Request $request)
     {
-        // TODO: Thêm validation và logic sau
-        return response()->json(['message' => 'Chức năng đang phát triển'], 501);
+        return response()->json(
+            ['message' => 'Chức năng đang phát triển'],
+            501,
+            [],
+            JSON_UNESCAPED_UNICODE
+        );
     }
-
-    // update, destroy tạm thời để sau
 }
