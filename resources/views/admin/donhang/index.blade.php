@@ -24,10 +24,41 @@
             <td>{{ $dh->ngayLap }}</td>
             <td class="text-danger fw-bold">{{ number_format($dh->tongThanhTien) }} ₫</td>
             <td>
-                <span class="badge bg-{{ $dh->trangThai == 'Hoàn thành' ? 'success' : ($dh->trangThai == 'Đang xử lý' ? 'warning' : 'info') }}">
-                    {{ $dh->trangThai }}
-                </span>
-            </td>
+    @php
+        $badgeClass = match($dh->trangThai) {
+
+            'Hoàn thành' => 'success',
+
+            'da_huy',
+            'Đã hủy' => 'danger',
+
+            'dang_xu_ly',
+            'Đang xử lý' => 'primary',
+
+            'cho_xac_nhan',
+            'Cho_xac_nhan',
+            'Chờ xác nhận' => 'warning',
+
+            default => 'secondary'
+        };
+
+        $trangThaiText = match($dh->trangThai) {
+
+            'da_huy' => 'Đã hủy',
+
+            'cho_xac_nhan',
+            'Cho_xac_nhan' => 'Chờ xác nhận',
+
+            'dang_xu_ly' => 'Đang xử lý',
+
+            default => $dh->trangThai
+        };
+    @endphp
+
+    <span class="badge bg-{{ $badgeClass }} px-3 py-2 rounded-pill">
+        {{ $trangThaiText }}
+    </span>
+</td>
             <td>
                 <a href="{{ route('admin.donhang.show', $dh) }}" class="btn btn-sm btn-info">Chi tiết</a>
             </td>

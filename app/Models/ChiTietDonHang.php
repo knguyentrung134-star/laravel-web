@@ -16,7 +16,7 @@ class ChiTietDonHang extends Model
     {
         return $this->belongsTo(DonHang::class, 'idDonHang', 'idDonHang');
     }
-
+    
     public function sanPham()
     {
         return $this->belongsTo(SanPham::class, 'idSanPham', 'idSanPham');

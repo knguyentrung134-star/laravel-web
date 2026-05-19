@@ -10,11 +10,39 @@ class OrderHistoryController extends Controller
 {
     public function index()
     {
-        $donHangs = DonHang::where('idKhachHang', Auth::user()->khachHang->idKhachHang ?? 0)
-                    ->with(['chiTietDonHangs.sanPham'])
-                    ->orderBy('idDonHang', 'desc')
-                    ->paginate(10);
+        $khachHang = Auth::user()->khachHang;
+
+        $donHangs = DonHang::where('idKhachHang', $khachHang?->idKhachHang)
+            ->with(['chiTietDonHangs.sanPham'])
+            ->orderByDesc('idDonHang')
+            ->paginate(10);
 
         return view('customer.order_history', compact('donHangs'));
+    }
+
+    // ==================== HỦY ĐƠN HÀNG ====================
+    public function huyDonHang(Request $request, $idDonHang)
+    {
+        $request->validate([
+            'ly_do_huy' => 'required|string|max:255'
+        ]);
+
+        $khachHang = Auth::user()->khachHang;
+
+        $donHang = DonHang::where('idDonHang', $idDonHang)
+            ->where('idKhachHang', $khachHang?->idKhachHang)
+            ->firstOrFail();
+
+        // Kiểm tra có được phép hủy không
+        if (!$donHang->canCancel()) {
+            return redirect()->back()
+                ->with('error', 'Đơn hàng này không thể hủy nữa.');
+        }
+
+        // Hủy đơn
+        $donHang->cancel($request->ly_do_huy);
+
+        return redirect()->route('order.history')
+            ->with('success', 'Đơn hàng #' . $donHang->idDonHang . ' đã được hủy thành công.');
     }
 }

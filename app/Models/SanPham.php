@@ -20,7 +20,7 @@ class SanPham extends Model
         'soLuong'
     ];
 
-    // Relationship
+    // Relationshipa
     public function tonKho()
     {
         return $this->hasOne(HangTonKho::class, 'idSanPham', 'idSanPham');

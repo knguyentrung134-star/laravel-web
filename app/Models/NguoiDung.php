@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;   
+use Laravel\Sanctum\HasApiTokens;
 
 class NguoiDung extends Authenticatable
 {
@@ -14,33 +14,41 @@ class NguoiDung extends Authenticatable
     protected $primaryKey = 'idNguoiDung';
     public $timestamps = false;
 
-    protected $fillable = ['tenNguoiDung', 'matKhau', 'vaiTro', 'email'];
+    // Những field cho phép mass assignment
+    protected $fillable = [
+        'ten_dang_nhap', 
+        'tenNguoiDung', 
+        'email', 
+        'mat_khau', 
+        'matKhau', 
+        'ho_ten', 
+        'hoTen', 
+        'so_dien_thoai', 
+        'vai_tro', 
+        'vaiTro'
+    ];
 
-    // Laravel dùng cột 'password' mặc định → đổi sang 'matKhau'
-    protected $hidden = ['matKhau'];
+    protected $hidden = ['mat_khau', 'matKhau'];
 
+    // Custom password column
     public function getAuthPasswordName()
     {
-        return 'matKhau';
+        return 'mat_khau';     // ưu tiên tên này
     }
-    public function khachHang()
-{
-    return $this->hasOne(\App\Models\KhachHang::class, 'idNguoiDung', 'idNguoiDung');
-}
 
     public function getAuthPassword()
     {
-        return $this->matKhau;
+        return $this->mat_khau ?? $this->matKhau;
     }
 
     // Relationship
-    // public function khachHang()
-    // {
-    //     return $this->hasOne(KhachHang::class, 'idNguoiDung', 'idNguoiDung');
-    // }
+    public function khachHang()
+    {
+        return $this->hasOne(\App\Models\KhachHang::class, 'idNguoiDung', 'idNguoiDung');
+    }
 
     public function donHangs()
     {
-        return $this->hasMany(DonHang::class, 'idNguoiDung', 'idNguoiDung');
+        return $this->hasMany(DonHang::class, 'idKhachHang', 'idNguoiDung');
     }
 }

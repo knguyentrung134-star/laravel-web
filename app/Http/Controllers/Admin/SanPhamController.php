@@ -10,9 +10,10 @@ use Illuminate\Support\Str;
 
 class SanPhamController extends Controller
 {
-    public function index()
+public function index()
 {
     $sanPhams = SanPham::orderBy('idSanPham', 'desc')->paginate(10);
+    
     return view('admin.sanpham.index', compact('sanPhams'));
 }
 

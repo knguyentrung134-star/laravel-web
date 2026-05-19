@@ -6,28 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\NguoiDung;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // Đăng ký
+    // ================= ĐĂNG KÝ =================
     public function register(Request $request)
     {
         $request->validate([
-            'ten_dang_nhap' => 'required|string|unique:nguoidung,ten_dang_nhap',
-            'email'         => 'required|email|unique:nguoidung,email',
-            'mat_khau'      => 'required|string|min:6',
-            'ho_ten'        => 'required|string',
-            'so_dien_thoai' => 'nullable|string',
+            'tenNguoiDung' => 'required|string|unique:nguoidung,tenNguoiDung',
+            'email'        => 'required|email|unique:nguoidung,email',
+            'matKhau'      => 'required|string|min:6',
         ]);
 
         $user = NguoiDung::create([
-            'ten_dang_nhap' => $request->ten_dang_nhap,
-            'email'         => $request->email,
-            'mat_khau'      => Hash::make($request->mat_khau),
-            'ho_ten'        => $request->ho_ten,
-            'so_dien_thoai' => $request->so_dien_thoai,
-            'vai_tro'       => 'khach_hang', // mặc định
+            'tenNguoiDung' => $request->tenNguoiDung,
+            'email'        => $request->email,
+            'matKhau'      => Hash::make($request->matKhau),
+            'vaiTro'       => 'Customer',
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -36,23 +31,30 @@ class AuthController extends Controller
             'message' => 'Đăng ký thành công',
             'user'    => $user,
             'token'   => $token
-        ], 201);
+        ], 201, [], JSON_UNESCAPED_UNICODE);
     }
 
-    // Đăng nhập
+    // ================= ĐĂNG NHẬP =================
     public function login(Request $request)
     {
         $request->validate([
-            'ten_dang_nhap' => 'required|string',
-            'mat_khau'      => 'required|string',
+            'tenNguoiDung' => 'required|string',
+            'matKhau'      => 'required|string',
+        ], [
+            'tenNguoiDung.required' => 'Vui lòng nhập tên đăng nhập',
+            'matKhau.required'      => 'Vui lòng nhập mật khẩu',
         ]);
 
-        $user = NguoiDung::where('ten_dang_nhap', $request->ten_dang_nhap)->first();
+        $user = NguoiDung::where(
+            'tenNguoiDung',
+            $request->tenNguoiDung
+        )->first();
 
-        if (!$user || !Hash::check($request->mat_khau, $user->mat_khau)) {
-            throw ValidationException::withMessages([
-                'ten_dang_nhap' => ['Thông tin đăng nhập không chính xác.'],
-            ]);
+        if (!$user || !Hash::check($request->matKhau, $user->matKhau)) {
+
+            return response()->json([
+                'message' => 'Tên đăng nhập hoặc mật khẩu không chính xác'
+            ], 401, [], JSON_UNESCAPED_UNICODE);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -60,23 +62,29 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Đăng nhập thành công',
             'user'    => $user,
-            'token'   => $token
-        ]);
+            'token'   => $token,
+            'token_type' => 'Bearer'
+        ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    // Đăng xuất
+    // ================= ĐĂNG XUẤT =================
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'message' => 'Đăng xuất thành công'
-        ]);
+        ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    // Lấy thông tin user
+    // ================= PROFILE =================
     public function profile(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json(
+            $request->user(),
+            200,
+            [],
+            JSON_UNESCAPED_UNICODE
+        );
     }
 }

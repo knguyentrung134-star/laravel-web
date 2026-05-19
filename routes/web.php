@@ -68,9 +68,9 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
     Route::resource('donhang', DonHangController::class);
 
     Route::resource('giamgia', ChuongTrinhGiamGiaController::class)
-    ->parameters([
-        'giamgia' => 'giamgia'
-    ]);
+        ->parameters([
+            'giamgia' => 'giamgia'
+        ]);
 
     Route::resource('khuyenmai', KhuyenMaiController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
@@ -96,9 +96,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Trả hàng
     Route::get('/tra-hang', [TraHangController::class, 'index'])->name('trahang.index');
+
     Route::post('/tra-hang', [TraHangController::class, 'store'])->name('trahang.store');
 
-    // Lịch sử
+    // Lịch sử mua hàng
     Route::get('/lichsu-muahang', [OrderHistoryController::class, 'index'])
         ->name('order.history');
 
@@ -106,16 +107,54 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/sanpham/{sanpham}/danhgia', [DanhGiaController::class, 'store'])
         ->name('danhgia.store');
 
-    // Giỏ hàng
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
-    Route::get('/cart/update', [CartController::class, 'update'])->name('cart.update');
-    Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
-    Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
-    Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
-    
-    // Checkout
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    
+    /*
+    |--------------------------------------------------------------------------
+    | GIỎ HÀNG
+    |--------------------------------------------------------------------------
+    */
+
+    // Xem giỏ hàng
+    Route::get('/cart', [CartController::class, 'index'])
+        ->name('cart.index');
+
+    // Thêm vào giỏ
+    Route::post('/cart/add', [CartController::class, 'add'])
+        ->name('cart.add');
+
+    // Tăng giảm số lượng
+    Route::get('/cart/update', [CartController::class, 'update'])
+        ->name('cart.update');
+
+    // Xóa sản phẩm khỏi giỏ hàng
+    Route::post('/cart/remove/{id}', [CartController::class, 'remove'])
+    ->name('cart.remove');
+
+    // Xóa toàn bộ giỏ hàng
+    Route::post('/cart/clear', [CartController::class, 'clear'])
+        ->name('cart.clear');
+
+    // Chọn sản phẩm để checkout
+    Route::post('/cart/checkout', [CartController::class, 'checkout'])
+        ->name('cart.checkout');
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHECKOUT
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/checkout', [CheckoutController::class, 'index'])
+        ->name('checkout.index');
+
+    Route::post('/checkout', [CheckoutController::class, 'store'])
+        ->name('checkout.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | HỦY ĐƠN HÀNG
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post('/don-hang/{idDonHang}/huy', [OrderHistoryController::class, 'huyDonHang'])
+        ->name('donhang.huy');
 });

@@ -18,23 +18,33 @@ use Carbon\Carbon;
 class CheckoutController extends Controller
 {
     public function index(Request $request)
-    {
-        $cart = $this->getOrCreateCart();
+{
+    $selectedIds = session('checkout_items', []);
 
-        $items = DonTrongGioHang::where('idGioHang', $cart->idGioHang)
-            ->with('sanPham')
-            ->get();
-
-        if ($items->isEmpty()) {
-            return redirect()->route('cart.index');
-        }
-
-        [$total, $discount] = $this->calculateCart($items);
-
-        $khachHang = Auth::user()->khachHang;
-
-        return view('checkout.index', compact('items', 'total', 'discount', 'khachHang'));
+    if (empty($selectedIds)) {
+        return redirect()->route('cart.index')
+            ->with('error', 'Không tìm thấy sản phẩm được chọn!');
     }
+
+    $cart = $this->getOrCreateCart();
+
+    $items = DonTrongGioHang::where('idGioHang', $cart->idGioHang)
+        ->whereIn('idDonTrongGioHang', $selectedIds)   // ← Quan trọng
+        ->with('sanPham')
+        ->get();
+
+    if ($items->isEmpty()) {
+        session()->forget('checkout_items');
+        return redirect()->route('cart.index')
+            ->with('error', 'Sản phẩm đã chọn không tồn tại!');
+    }
+
+    [$total, $discount] = $this->calculateCart($items);
+
+    $khachHang = Auth::user()->khachHang;
+
+    return view('checkout.index', compact('items', 'total', 'discount', 'khachHang'));
+}
 
     public function store(Request $request)
     {
