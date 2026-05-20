@@ -8,10 +8,11 @@
     <!-- HEADER -->
     <div class="row mb-4">
         <div class="col-12">
-            <h1 class="display-6">
+            <h1 class="display-6 dashboard-title">
                 👋 Xin chào, <strong>{{ auth()->user()->tenNguoiDung }}</strong>!
             </h1>
-            <p class="lead text-muted">
+
+            <p class="lead dashboard-subtitle">
                 Chào mừng bạn đến với trang quản trị hệ thống Băng Đĩa Nhạc
             </p>
         </div>

@@ -22,10 +22,9 @@
                     @foreach($items as $item)
                     @php
                         $sp = $item->sanPham;
-                        // 🔥 Ưu tiên giá đã lưu trong giỏ hàng
-                        $giaHienTai = $item->gia ?? $sp->gia;
-                        $giaGoc     = $sp->gia;
-                        $thanhTien  = $giaHienTai * $item->soLuong;
+                        $giaGoc = $sp->gia ?? 0;
+                        $giaHienTai = $item->giaSauGiam ?? $item->gia ?? $giaGoc;
+                        $thanhTien = $giaHienTai * $item->soLuong;
                     @endphp
 
                     <tr>
@@ -54,13 +53,13 @@
                 </tbody>
                 <tfoot>
                     <tr class="fw-bold">
-                        <td colspan="3" class="text-end">Tổng tiền:</td>
-                        <td class="text-end text-danger">{{ number_format($total) }} ₫</td>
+                        <td colspan="3" class="text-end">Tổng tiền gốc:</td>
+                        <td class="text-end">{{ number_format($total + $discount) }} ₫</td>
                     </tr>
 
                     @if(isset($discount) && $discount > 0)
                     <tr class="fw-bold text-success">
-                        <td colspan="3" class="text-end">Tiết kiệm:</td>
+                        <td colspan="3" class="text-end">Tiết kiệm (khuyến mãi):</td>
                         <td class="text-end">- {{ number_format($discount) }} ₫</td>
                     </tr>
                     @endif
@@ -81,6 +80,29 @@
                 </div>
                 <div class="card-body">
 
+                    <!-- Form áp dụng mã giảm giá (GET) -->
+                    <form method="GET" action="{{ route('checkout.index') }}" class="mb-4">
+                        @csrf
+                        <label class="form-label fw-bold">Mã giảm giá</label>
+                        <div class="input-group">
+                            <input type="text" 
+                                   name="ma_giam_gia" 
+                                   class="form-control" 
+                                   placeholder="Nhập mã giảm giá (ví dụ: 80%)" 
+                                   value="{{ $maGiamGia ?? '' }}">
+                            <button type="submit" class="btn btn-outline-primary">Áp dụng</button>
+                        </div>
+                    </form>
+
+                    <!-- Thông báo -->
+                    @if(session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
+                    @if(session('error'))
+                        <div class="alert alert-danger">{{ session('error') }}</div>
+                    @endif
+
+                    <!-- Form đặt hàng chính (POST) -->
                     <form id="checkoutForm" action="{{ route('checkout.store') }}" method="POST">
                         @csrf
 
@@ -104,24 +126,6 @@
                                    value="{{ old('soDienThoai', $khachHang->soDienThoai ?? '') }}" required>
                         </div>
 
-                        <!-- Mã giảm giá -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Mã giảm giá</label>
-                            <div class="input-group">
-                                <input type="text" name="coupon_code" id="coupon_code" 
-                                       class="form-control" placeholder="Nhập mã giảm giá..." 
-                                       value="{{ old('coupon_code') }}">
-                                <button type="button" onclick="applyCoupon()" 
-                                        class="btn btn-outline-primary">Áp dụng</button>
-                            </div>
-                        </div>
-
-                        @if(session('applied_coupon'))
-                            <div class="alert alert-success py-2">
-                                ✅ Đã áp dụng: <strong>{{ session('applied_coupon')->moTaKhuyenMai }}</strong>
-                            </div>
-                        @endif
-
                         <!-- Phương thức thanh toán -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">Phương thức thanh toán</label>
@@ -133,28 +137,23 @@
                             </select>
                         </div>
 
-                        <!-- Khu vực QR Code -->
+                        <!-- QR Code -->
                         <div id="qrCodeSection" class="mb-4" style="display: none;">
+                            <!-- ... giữ nguyên phần QR Code của bạn ... -->
                             <div class="card border-primary">
                                 <div class="card-header bg-primary text-white text-center py-2">
                                     <h6 class="mb-0">Quét mã QR để thanh toán</h6>
                                 </div>
                                 <div class="card-body text-center p-3">
-                                    <img id="qrImage" 
-                                         src="https://img.vietqr.io/image/BIDV-2601663003-compact2.png?amount=0"
-                                         class="img-fluid rounded shadow" 
-                                         style="max-width: 280px;"
-                                         alt="Mã QR Thanh toán">
-
+                                    <img id="qrImage" src="" class="img-fluid rounded shadow" style="max-width: 280px;">
                                     <div class="mt-3 small text-muted">
                                         <p class="mb-1 fw-bold">Ngân hàng BIDV</p>
                                         <p class="mb-1">Số tài khoản: <strong>2601663003</strong></p>
                                         <p>Chủ tài khoản: NGUYEN TRUNG KIEN</p>
-                                        <p class="mt-2 text-danger fw-bold">Vui lòng chuyển đúng số tiền trên đơn hàng</p>
                                     </div>
                                 </div>
                             </div>
-                        </div>          
+                        </div>
 
                         <button type="submit" class="btn btn-success btn-lg w-100">
                             <i class="bi bi-check-circle"></i> Xác nhận đặt hàng
@@ -170,19 +169,15 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const select     = document.getElementById('phuongThuc');
-    const qrSection  = document.getElementById('qrCodeSection');
-    const qrImage    = document.getElementById('qrImage');
-
+    const select = document.getElementById('phuongThuc');
+    const qrSection = document.getElementById('qrCodeSection');
+    const qrImage = document.getElementById('qrImage');
     const baseUrl = "https://img.vietqr.io/image/BIDV-2601663003-compact2.png";
 
     function updateQR() {
         if (select.value === 'ChuyenKhoan') {
             const amount = {{ (int) $total }};
-            const addInfo = encodeURIComponent("DH{{ auth()->id() ?? 'KH' }}");
-
-            const newSrc = `${baseUrl}?amount=${amount}&addInfo=${addInfo}&accountName=NGUYEN%20TRUNG%20KIEN`;
-
+            const newSrc = `${baseUrl}?amount=${amount}&addInfo=DH{{ auth()->id() ?? 'KH' }}&accountName=NGUYEN%20TRUNG%20KIEN`;
             qrImage.src = newSrc;
             qrSection.style.display = 'block';
         } else {

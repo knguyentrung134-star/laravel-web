@@ -244,5 +244,16 @@ document.addEventListener('DOMContentLoaded', function () {
 <!-- 🔥 CHO VIEW CON -->
 @stack('scripts')
 @yield('scripts')
+<!-- 🎵 Nốt nhạc rơi -->
+<div class="music-notes">
+    {{-- <span>🎵</span>
+    <span>🎶</span>
+    <span>♬</span>
+    <span>🎵</span>
+    <span>♩</span>
+    <span>🎶</span>
+    <span>♫</span>
+    <span>🎵</span> --}}
+</div>
 </body>
 </html>

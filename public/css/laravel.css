@@ -365,3 +365,244 @@ h1, h2, h3, h4, h5 {
     50% { opacity: 0.7; }
     100% { opacity: 1; }
 }
+/* =========================================================
+   🎵 FIX ĐẸP DASHBOARD ADMIN
+   ========================================================= */
+
+/* 🌈 Card admin sáng hơn */
+.card {
+    background: rgba(22, 22, 22, 0.78) !important;
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    backdrop-filter: blur(10px);
+
+    box-shadow:
+        0 6px 18px rgba(0,0,0,0.18);
+
+    transition: all 0.3s ease;
+}
+
+/* ✨ Hover mềm */
+.card:hover {
+    transform: translateY(-8px);
+
+    background: rgba(32, 32, 32, 0.88) !important;
+
+    box-shadow:
+        0 12px 28px rgba(0,0,0,0.28);
+}
+
+/* 🎵 Icon glow nhẹ */
+.card i {
+    transition: all 0.3s ease;
+
+    filter: drop-shadow(0 0 4px rgba(255,255,255,0.15));
+}
+
+.card:hover i {
+    transform: scale(1.12);
+
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+}
+
+/* 📝 Tiêu đề card */
+.card h5 {
+    color: #ffd369 !important;
+
+    font-weight: 700;
+
+    letter-spacing: 0.3px;
+
+    transition: all 0.3s ease;
+}
+
+/* Hover title */
+.card:hover h5 {
+    color: #ffe6a7 !important;
+}
+
+/* 📄 Nội dung */
+.card p {
+    color: rgba(255,255,255,0.7) !important;
+
+    transition: all 0.3s ease;
+}
+
+.card:hover p {
+    color: rgba(255,255,255,0.9) !important;
+}
+
+/* 🚀 Button đẹp hơn */
+.card .btn {
+    border-radius: 12px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.3px;
+
+    transition: all 0.25s ease;
+}
+
+/* Hover button */
+.card:hover .btn {
+    transform: scale(1.03);
+}
+
+/* 🌟 Header dashboard đẹp hơn */
+.dashboard-title {
+    font-size: 2.4rem;
+
+    color: #fff4d0;
+
+    text-shadow:
+        0 3px 12px rgba(0,0,0,0.25);
+}
+
+.dashboard-subtitle {
+    color: rgba(255,255,255,0.92);
+
+    font-size: 1.08rem;
+}
+/* =========================================================
+   🤍 FIX CHỮ MÀU TRẮNG
+   ========================================================= */
+
+/* Label */
+label,
+.form-label {
+    color: #ffffff !important;
+}
+
+/* Input */
+input,
+.form-control {
+    color: #ffffff !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+}
+
+/* Placeholder */
+input::placeholder {
+    color: rgba(255,255,255,0.6) !important;
+}
+
+/* Select */
+select,
+.form-select {
+    color: #ffffff !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+}
+
+/* Option trong select */
+select option {
+    color: #000;
+}
+
+/* Link */
+a {
+    color: #ffffff;
+}
+
+/* Text nhỏ */
+small,
+span,
+p {
+    color: #ffffff;
+}
+/* =========================================================
+   🎵 NỐT NHẠC RƠI
+   ========================================================= */
+
+.music-notes {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.music-notes span {
+    position: absolute;
+    top: -50px;
+
+    font-size: 26px;
+    font-weight: bold;
+
+    /* 🌈 Màu sáng nổi trên nền trời */
+    color: #fa1003;
+
+    /* ✨ Glow */
+    text-shadow:
+        0 0 5px #d1f605,
+        0 0 10px #ffe066,
+        0 0 20px #ff00b3,
+        0 0 35px #00ff26;
+
+    opacity: 0.95;
+
+    animation: fall linear infinite;
+}
+/* Animation rơi */
+@keyframes fall {
+    0% {
+        transform: translateY(-50px) rotate(0deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Các vị trí random */
+.music-notes span:nth-child(1) {
+    left: 5%;
+    animation-duration: 8s;
+    font-size: 24px;
+}
+
+.music-notes span:nth-child(2) {
+    left: 15%;
+    animation-duration: 10s;
+    animation-delay: 2s;
+}
+
+.music-notes span:nth-child(3) {
+    left: 28%;
+    animation-duration: 7s;
+    animation-delay: 1s;
+}
+
+.music-notes span:nth-child(4) {
+    left: 40%;
+    animation-duration: 11s;
+}
+
+.music-notes span:nth-child(5) {
+    left: 52%;
+    animation-duration: 9s;
+    animation-delay: 3s;
+}
+
+.music-notes span:nth-child(6) {
+    left: 65%;
+    animation-duration: 8s;
+}
+
+.music-notes span:nth-child(7) {
+    left: 78%;
+    animation-duration: 12s;
+    animation-delay: 2s;
+}
+
+.music-notes span:nth-child(8) {
+    left: 90%;
+    animation-duration: 9s;
+}

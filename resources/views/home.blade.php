@@ -24,7 +24,7 @@
                 <div class="hero-slide" style="background-image: url('{{ asset('images/back.jpg') }}')">
                     <div class="overlay"></div>
                     <div class="content">
-                        <h1 class="fw-bold">🎵 Nguyễn Trung Kiên</h1>
+                        <h1 class="fw-bold">🎵 Phong cách cảm xúc - nhẹ nhàng</h1>
                         <p>Nghe nhạc - Sưu tầm - Đam mê</p>
                     </div>
                 </div>
