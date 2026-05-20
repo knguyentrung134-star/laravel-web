@@ -8,49 +8,59 @@ use Illuminate\Http\Request;
 
 class KhuyenMaiController extends Controller
 {
-    public function index()
-    {
-        $khuyenMais = KhuyenMai::orderBy('idKhuyenMai', 'desc')->paginate(10);
-        return view('admin.khuyenmai.index', compact('khuyenMais'));
-    }
+public function index()
+{
+    $khuyenMais = KhuyenMai::orderBy('idKhuyenMai', 'desc')
+                           ->paginate(10);   // ← Thay get() thành paginate()
 
-    public function create()
-    {
-        return view('admin.khuyenmai.create');
-    }
+    return view('admin.khuyenmai.index', compact('khuyenMais'));
+}
+public function create()
+{
+    return view('admin.khuyenmai.create');
+}
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'moTaKhuyenMai' => 'required|string|max:200',
-            'ngayBatDau'    => 'required|date',
-            'ngayKetThuc'   => 'required|date|after_or_equal:ngayBatDau',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'maKhuyenMai'     => 'required|string|unique:khuyenmai,maKhuyenMai',
+        'tenKhuyenMai'    => 'nullable|string|max:100',
+        'moTaKhuyenMai'   => 'required|string',
+        'phanTramGiam'    => 'required|integer|min:1|max:100',
+        'ngayBatDau'      => 'required|date',
+        'ngayKetThuc'     => 'required|date|after_or_equal:ngayBatDau',
+    ]);
 
-        KhuyenMai::create($request->all());
+    KhuyenMai::create($request->all());
 
-        return redirect()->route('admin.khuyenmai.index')
-            ->with('success', 'Thêm khuyến mãi thành công!');
-    }
+    return redirect()->route('admin.khuyenmai.index')
+        ->with('success', 'Thêm khuyến mãi thành công!');
+}
 
-    public function edit(KhuyenMai $khuyenmai)
-    {
-        return view('admin.khuyenmai.edit', compact('khuyenmai'));
-    }
+public function edit($id)
+{
+    $khuyenMai = KhuyenMai::findOrFail($id);
+    return view('admin.khuyenmai.edit', compact('khuyenMai'));
+}
 
-    public function update(Request $request, KhuyenMai $khuyenmai)
-    {
-        $request->validate([
-            'moTaKhuyenMai' => 'required|string|max:200',
-            'ngayBatDau'    => 'required|date',
-            'ngayKetThuc'   => 'required|date|after_or_equal:ngayBatDau',
-        ]);
+public function update(Request $request, $id)
+{
+    $request->validate([
+        'maKhuyenMai'     => 'required|string|unique:khuyenmai,maKhuyenMai,'.$id.',idKhuyenMai',
+        'tenKhuyenMai'    => 'nullable|string|max:100',
+        'moTaKhuyenMai'   => 'required|string',
+        'phanTramGiam'    => 'required|integer|min:1|max:100',
+        'ngayBatDau'      => 'required|date',
+        'ngayKetThuc'     => 'required|date|after_or_equal:ngayBatDau',
+        'trangThai'       => 'required|in:0,1',
+    ]);
 
-        $khuyenmai->update($request->all());
+    $khuyenMai = KhuyenMai::findOrFail($id);
+    $khuyenMai->update($request->all());
 
-        return redirect()->route('admin.khuyenmai.index')
-            ->with('success', 'Cập nhật khuyến mãi thành công!');
-    }
+    return redirect()->route('admin.khuyenmai.index')
+        ->with('success', 'Cập nhật khuyến mãi thành công!');
+}
 
     public function destroy(KhuyenMai $khuyenmai)
     {

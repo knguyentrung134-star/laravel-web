@@ -8,11 +8,49 @@ class KhuyenMai extends Model
 {
     protected $table = 'khuyenmai';
     protected $primaryKey = 'idKhuyenMai';
-    public $timestamps = false;     // ← Quan trọng: tắt timestamps
+    public $timestamps = false;   // Không dùng created_at, updated_at
 
-    protected $fillable = ['moTaKhuyenMai', 'ngayBatDau', 'ngayKetThuc'];
+    /**
+     * Các cột được phép gán hàng loạt (mass assignment)
+     */
+    protected $fillable = [
+        'maKhuyenMai',
+        'tenKhuyenMai',
+        'moTaKhuyenMai',
+        'phanTramGiam',
+        'ngayBatDau',
+        'ngayKetThuc',
+        'trangThai'
+    ];
 
-    // Sắp xếp mặc định theo id giảm dần (vì không có created_at)
-    protected $orderBy = 'idKhuyenMai';
-    protected $orderDirection = 'desc';
+    /**
+     * Cast dữ liệu cho một số cột
+     */
+    protected $casts = [
+        'phanTramGiam' => 'integer',
+        'trangThai'    => 'boolean',
+        'ngayBatDau'   => 'date',
+        'ngayKetThuc'  => 'date',
+    ];
+
+    /**
+     * Scope mặc định: sắp xếp theo ID giảm dần
+     */
+    protected static function booted()
+    {
+        static::addGlobalScope('order', function ($query) {
+            $query->orderBy('idKhuyenMai', 'desc');
+        });
+    }
+
+    /**
+     * Kiểm tra khuyến mãi còn hiệu lực không
+     */
+    public function isActive(): bool
+    {
+        $today = now()->toDateString();
+        return $this->trangThai == 1 
+               && $this->ngayBatDau <= $today 
+               && $this->ngayKetThuc >= $today;
+    }
 }

@@ -6,24 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('khuyenmai', function (Blueprint $table) {
-    $table->id('idKhuyenMai');
-    $table->string('moTaKhuyenMai', 200)->nullable();
-    $table->date('ngayBatDau')->nullable();
-    $table->date('ngayKetThuc')->nullable();
-});
+        Schema::table('khuyenmai', function (Blueprint $table) {
+            $table->string('maKhuyenMai', 50)->unique()->nullable()->after('idKhuyenMai');
+            $table->string('tenKhuyenMai', 100)->nullable()->after('maKhuyenMai');
+            $table->integer('phanTramGiam')->default(0)->after('tenKhuyenMai');
+            $table->tinyInteger('trangThai')->default(1)->after('ngayKetThuc'); // 1 = active
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('khuyenmai');
+        Schema::table('khuyenmai', function (Blueprint $table) {
+            $table->dropColumn(['maKhuyenMai', 'tenKhuyenMai', 'phanTramGiam', 'trangThai']);
+        });
     }
 };

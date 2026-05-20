@@ -14,12 +14,8 @@
     <!-- CSS -->
     <link rel="stylesheet" href="{{ asset('css/laravel.css') }}">
 
-    <!-- Animation alert -->
     <style>
-        .alert {
-            animation: slideDown 0.4s ease;
-        }
-
+        .alert { animation: slideDown 0.4s ease; }
         @keyframes slideDown {
             from { transform: translateY(-20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -45,14 +41,13 @@
                 <li class="nav-item mx-3">
                     <form class="d-flex" action="{{ route('search') }}" method="GET">
                         <input class="form-control me-2" type="search" name="q"
-                               placeholder="Tìm kiếm..."
-                               value="{{ request('q') }}">
+                               placeholder="Tìm kiếm..." value="{{ request('q') }}">
                         <button class="btn btn-outline-info">🔍</button>
                     </form>
                 </li>
 
                 @auth
-                    <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">🏠Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">🏠 Trang chủ</a></li>
 
                     @if(auth()->user()->vaiTro === 'Customer')
                         <li class="nav-item"><a class="nav-link" href="{{ route('cart.index') }}">🛒 Giỏ hàng</a></li>
@@ -83,7 +78,6 @@
                 @guest
                     <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Đăng nhập</a></li>
                 @endguest
-
             </ul>
         </div>
     </div>
@@ -109,63 +103,23 @@
     @yield('content')
 </div>
 
-<!-- CHAT -->
-<div id="chat-toggle" onclick="toggleChat()">💬</div>
-
-<div id="chat-box">
-    <div class="chat-header">
-        🎧 Hỗ trợ
-        <span onclick="toggleChat()">✖</span>
-    </div>
-
-    <div class="chat-body" id="chat-body">
-        <div class="bot">Xin chào 👋</div>
-    </div>
-
-    <div class="chat-footer">
-        <input type="text" id="chat-input" placeholder="Nhập..." onkeypress="handleEnter(event)">
-        <button onclick="sendMessage()">Gửi</button>
-    </div>
-</div>
-
-<!-- HOTLINE -->
-<div id="hotline-btn" onclick="togglePhone()">📞</div>
-
-<div id="phone-popup">
-    📞 0901 234 567
-</div>
-
-<!-- FOOTER -->
-<footer class="text-white py-4 mt-5" style="background:#020617;">
-    <div class="container d-flex justify-content-between">
-        <div>🎵 Băng Đĩa Nhạc</div>
-        <div>&copy; {{ date('Y') }}</div>
-    </div>
-</footer>
-
-<!-- POPUP KHUYẾN MÃI -->
-@if(isset($khuyenMai) && $khuyenMai->count() > 0)
-<div id="welcomePopup" class="modal fade" tabindex="-1">
-    <div class="modal-dialog">
+<!-- ==================== POPUP KHUYẾN MÃI ==================== -->
+@if(isset($khuyenMai) && $khuyenMai instanceof \Illuminate\Database\Eloquent\Collection && $khuyenMai->isNotEmpty())
+<div id="welcomePopup" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title">🎵 Chào mừng đến Băng Đĩa Nhạc</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
-                <p class="fw-bold text-success">🎉 Khuyến mãi đang diễn ra:</p>
+                <p class="fw-bold text-success fs-5 mb-3">🎉 Khuyến mãi đang diễn ra:</p>
 
                 @foreach($khuyenMai as $km)
-                    <div class="mb-3 border p-2 rounded">
-                        <strong>{{ $km->moTa ?? 'Ưu đãi đặc biệt' }}</strong><br>
-
-                        Giảm:
-                        <span class="text-danger fw-bold">
-                            {{ $km->phanTramGiam }}%
-                        </span><br>
-
+                    <div class="mb-3 p-3 border rounded bg-light">
+                        <strong>{{ $km->moTaKhuyenMai ?? 'Ưu đãi đặc biệt' }}</strong><br>
+                        <span class="text-danger fw-bold fs-5">Giảm {{ $km->phanTramGiam ?? 0 }}%</span><br>
                         <small class="text-muted">
                             {{ \Carbon\Carbon::parse($km->ngayBatDau)->format('d/m/Y') }}
                             →
@@ -176,15 +130,40 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-primary" data-bs-dismiss="modal">
-                    Mua ngay 🎧
-                </button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Mua ngay 🎧</button>
             </div>
-
         </div>
     </div>
 </div>
 @endif
+
+<!-- CHAT -->
+<div id="chat-toggle" onclick="toggleChat()">💬</div>
+<div id="chat-box">
+    <div class="chat-header">
+        🎧 Hỗ trợ
+        <span onclick="toggleChat()">✖</span>
+    </div>
+    <div class="chat-body" id="chat-body">
+        <div class="bot">Xin chào 👋</div>
+    </div>
+    <div class="chat-footer">
+        <input type="text" id="chat-input" placeholder="Nhập..." onkeypress="handleEnter(event)">
+        <button onclick="sendMessage()">Gửi</button>
+    </div>
+</div>
+
+<!-- HOTLINE -->
+<div id="hotline-btn" onclick="togglePhone()">📞</div>
+<div id="phone-popup">📞 0901 234 567</div>
+
+<!-- FOOTER -->
+<footer class="text-white py-4 mt-5" style="background:#020617;">
+    <div class="container d-flex justify-content-between">
+        <div>🎵 Băng Đĩa Nhạc</div>
+        <div>&copy; {{ date('Y') }}</div>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -193,26 +172,20 @@
 function toggleChat() {
     document.getElementById("chat-box").classList.toggle("active");
 }
-
 function sendMessage() {
     let input = document.getElementById("chat-input");
     let body = document.getElementById("chat-body");
-
     if (!input.value.trim()) return;
-
     body.innerHTML += `<div class="user">${input.value}</div>`;
     body.scrollTop = body.scrollHeight;
-
-    setTimeout(()=>{
+    setTimeout(() => {
         body.innerHTML += `<div class="bot">Shop sẽ phản hồi 🎧</div>`;
         body.scrollTop = body.scrollHeight;
-    },500);
-
-    input.value="";
+    }, 500);
+    input.value = "";
 }
-
-function handleEnter(e){
-    if(e.key==="Enter") sendMessage();
+function handleEnter(e) {
+    if (e.key === "Enter") sendMessage();
 }
 
 // HOTLINE
@@ -220,40 +193,26 @@ function togglePhone() {
     document.getElementById("phone-popup").classList.toggle("show");
 }
 
-// AUTO ẨN ALERT
+// AUTO HIDE ALERT
 setTimeout(() => {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
+    document.querySelectorAll('.alert').forEach(alert => {
         let bsAlert = new bootstrap.Alert(alert);
         bsAlert.close();
     });
-}, 3000);
+}, 4000);
 
 // POPUP KHUYẾN MÃI
 document.addEventListener('DOMContentLoaded', function () {
     let popupEl = document.getElementById('welcomePopup');
-
     if (popupEl && !sessionStorage.getItem('shownPopup')) {
         let popup = new bootstrap.Modal(popupEl);
         popup.show();
-
         sessionStorage.setItem('shownPopup', 'true');
     }
 });
 </script>
-<!-- 🔥 CHO VIEW CON -->
+
 @stack('scripts')
 @yield('scripts')
-<!-- 🎵 Nốt nhạc rơi -->
-<div class="music-notes">
-    {{-- <span>🎵</span>
-    <span>🎶</span>
-    <span>♬</span>
-    <span>🎵</span>
-    <span>♩</span>
-    <span>🎶</span>
-    <span>♫</span>
-    <span>🎵</span> --}}
-</div>
 </body>
 </html>

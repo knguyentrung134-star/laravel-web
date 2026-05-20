@@ -9,17 +9,16 @@ use Illuminate\Support\Facades\Auth;
 class OrderHistoryController extends Controller
 {
     public function index()
-    {
-        $khachHang = Auth::user()->khachHang;
+{
+    $khachHang = Auth::user()->khachHang;
 
-        $donHangs = DonHang::where('idKhachHang', $khachHang?->idKhachHang)
-            ->with(['chiTietDonHangs.sanPham'])
-            ->orderByDesc('idDonHang')
-            ->paginate(10);
+    $donHangs = DonHang::where('idKhachHang', $khachHang->idKhachHang)
+        ->with(['chiTietDonHangs.sanPham', 'thanhToan'])
+        ->orderBy('ngayLap', 'desc')
+        ->get();
 
-        return view('customer.order_history', compact('donHangs'));
-    }
-
+    return view('customer.order-history', compact('donHangs')); // hoặc tên view của bạn
+}
     // ==================== HỦY ĐƠN HÀNG ====================
     public function huyDonHang(Request $request, $idDonHang)
     {
