@@ -10,7 +10,13 @@ class ThanhToan extends Model
     protected $primaryKey = 'idThanhToan';
     public $timestamps = false;
 
-    protected $fillable = ['idDonHang', 'ngayThanhToan', 'soTien', 'phuongThuc', 'trangThai'];
+    protected $fillable = [
+        'idDonHang', 
+        'ngayThanhToan', 
+        'soTien', 
+        'phuongThuc', 
+        'trangThai'
+    ];
 
     public function donHang()
     {

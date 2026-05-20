@@ -63,7 +63,7 @@
                         @foreach($don->chiTietDonHangs as $ct)
                             @php
                                 $giaGoc = $ct->sanPham->gia ?? 0;
-                                $donGia = $ct->donGia ?? $giaGoc;   // Quan trọng: dùng donGia đã lưu
+                                $donGia = $ct->donGia ?? $giaGoc;
                             @endphp
 
                             <tr>
@@ -76,8 +76,7 @@
                                 </td>
 
                                 <td class="text-end">
-                                    @if($donGia < $giaGoc)
-                                        <!-- Có giảm giá -->
+                                    @if($donGia < $giaGoc && $donGia > 0)
                                         <span class="text-danger fw-bold">
                                             {{ number_format($donGia) }} ₫
                                         </span>
@@ -89,7 +88,6 @@
                                             (-{{ round((($giaGoc - $donGia) / $giaGoc) * 100) }}%)
                                         </small>
                                     @else
-                                        <!-- Không giảm giá -->
                                         <span class="fw-bold">
                                             {{ number_format($donGia) }} ₫
                                         </span>
@@ -153,9 +151,12 @@
 
         @endforeach
 
-        <div class="mt-4">
-            {{ $donHangs->links() }}
-        </div>
+        {{-- Phân trang --}}
+        @if($donHangs instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            <div class="mt-4">
+                {{ $donHangs->links() }}
+            </div>
+        @endif
 
     @endif
 </div>

@@ -17,7 +17,7 @@ class OrderHistoryController extends Controller
         ->orderBy('ngayLap', 'desc')
         ->get();
 
-    return view('customer.order-history', compact('donHangs')); // hoặc tên view của bạn
+    return view('customer.order_history', compact('donHangs')); // hoặc tên view của bạn
 }
     // ==================== HỦY ĐƠN HÀNG ====================
     public function huyDonHang(Request $request, $idDonHang)
